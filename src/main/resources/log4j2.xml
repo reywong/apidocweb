@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration status="OFF">
+	<appenders>
+		<Console name="console">
+			<PatternLayout pattern="[%-5p] %d{yyyy-MM-dd HH:mm:ss,SSS} %l >>> %m %n" />
+		</Console>
+		<RollingFile name="file" fileName="sit/msg/msgsoa.log" filePattern="logs/$${date:yyyy-MM}/msgsoa-%d{yyyy-MM-dd}-%i.log">
+			<PatternLayout pattern="[%-5p] %d{yyyy-MM-dd HH:mm:ss,SSS} %l >>> %m %n" />
+			<SizeBasedTriggeringPolicy size="10 MB" />
+		</RollingFile>
+	</appenders>
+	
+	<loggers>
+		<logger name="com.opensymphony" level="info" additivity="false">
+			<appender-ref ref="console" />
+			<appender-ref ref="file" />
+		</logger>
+		
+		<logger name="org.springframework" level="info" additivity="false">
+			<appender-ref ref="console" />
+			<appender-ref ref="file" />
+		</logger>
+
+		<logger name="org.springframework.jdbc.core" level="info" additivity="false">
+			<appender-ref ref="console" />
+			<appender-ref ref="file" />
+		</logger>
+
+		<logger name="net.sf.json" level="warn" additivity="false">
+			<appender-ref ref="console" />
+			<appender-ref ref="file" />
+		</logger>
+
+		<logger name="com.ibm.gbs.ai.portal.framework" level="all" additivity="false">
+			<appender-ref ref="console" />
+			<appender-ref ref="file" />
+		</logger>
+
+		<logger name="com.yto.coresystem" level="all" additivity="false">
+			<appender-ref ref="console" />
+			<appender-ref ref="file" />
+		</logger>
+
+		<root level="info">
+			<appender-ref ref="console" />
+			<appender-ref ref="file" />
+		</root>
+	</loggers>
+</configuration> 
