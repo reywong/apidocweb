@@ -130,7 +130,7 @@
             <div class="col-sm-10">
                 <input type="file" name="apidoc" id="apidoc">
 
-                <p class="help-block">请上传apidoc的接口描述文件.<a target="_blank" href="http://apidocjs.com/"></a>apidoc帮助文档</p>
+                <p class="help-block">请上传apidoc的接口描述文件.<a target="_blank" href="http://apidocjs.com/">apidoc帮助文档</a></p>
             </div>
         </div>
 
