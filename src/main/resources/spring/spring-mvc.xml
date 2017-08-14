@@ -24,6 +24,7 @@
 
     <mvc:resources mapping="/resource/**" location="/resource/"/>
     <mvc:resources mapping="/apidoc/**" location="/apidoc/"/>
+    <mvc:resources mapping="/apidocconfig/**" location="/apidocconfig/"/>
 
 
     <!-- 视图解析器 -->

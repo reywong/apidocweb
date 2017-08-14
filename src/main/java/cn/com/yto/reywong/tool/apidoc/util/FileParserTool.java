@@ -167,7 +167,6 @@ public class FileParserTool {
     public static boolean delete(String fileName) {
         File file = new File(fileName);
         if (!file.exists()) {
-            System.out.println("删除文件失败:" + fileName + "不存在！");
             return false;
         } else {
             if (file.isFile())
@@ -188,14 +187,11 @@ public class FileParserTool {
         // 如果文件路径所对应的文件存在，并且是一个文件，则直接删除
         if (file.exists() && file.isFile()) {
             if (file.delete()) {
-                System.out.println("删除单个文件" + fileName + "成功！");
                 return true;
             } else {
-                System.out.println("删除单个文件" + fileName + "失败！");
                 return false;
             }
         } else {
-            System.out.println("删除单个文件失败：" + fileName + "不存在！");
             return false;
         }
     }
@@ -213,7 +209,6 @@ public class FileParserTool {
         File dirFile = new File(dir);
         // 如果dir对应的文件不存在，或者不是一个目录，则退出
         if ((!dirFile.exists()) || (!dirFile.isDirectory())) {
-            System.out.println("删除目录失败：" + dir + "不存在！");
             return false;
         }
         boolean flag = true;
@@ -235,12 +230,10 @@ public class FileParserTool {
             }
         }
         if (!flag) {
-            System.out.println("删除目录失败！");
             return false;
         }
         // 删除当前目录
         if (dirFile.delete()) {
-            System.out.println("删除目录" + dir + "成功！");
             return true;
         } else {
             return false;

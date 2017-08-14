@@ -1,7 +1,10 @@
 package cn.com.yto.reywong.tool.apidoc.util;
 
 import cn.com.yto.reywong.tool.apidoc.domain.ApiDocBean;
+import cn.com.yto.reywong.tool.apidoc.domain.AppResult;
 import com.alibaba.fastjson.JSON;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,6 +18,7 @@ import java.util.List;
  * Created by wangrui on 2017/8/10.
  */
 public class ApiDocUtil {
+    private static final Logger logger = LoggerFactory.getLogger(ApiDocUtil.class);
 
     /**
      * 获取所有接口文档
@@ -43,8 +47,9 @@ public class ApiDocUtil {
      */
     public static List<File> getApiDocFile() {
         List<File> result = new ArrayList<File>();
-        String apidocHome = FileParserTool.getUrl("apidoc");
+        String apidocHome = FileParserTool.getUrl("application.properties");
         if (!StringUtils.isEmpty(apidocHome)) {
+            apidocHome = apidocHome.substring(0, apidocHome.lastIndexOf("WEB-INF")) + "apidocconfig/";
             File file = new File(apidocHome);
             File[] apidocs = file.listFiles();
             if (apidocs != null && apidocs.length > 0) {
@@ -66,8 +71,10 @@ public class ApiDocUtil {
      * @param multipartFile
      * @return
      */
-    public static boolean addApiDoc(ApiDocBean apiDocBean, MultipartFile multipartFile) {
-        boolean result = false;
+    public static AppResult addApiDoc(ApiDocBean apiDocBean, MultipartFile multipartFile) {
+        AppResult appResult = new AppResult();
+        boolean resultFlag = false;
+        String resultMessage = "系统错误，请重新再试";
         //是否存在返回
         String name = apiDocBean.getName();
         if (!StringUtils.isEmpty(name)) {
@@ -76,61 +83,80 @@ public class ApiDocUtil {
                 for (int i = 0; i < apiDocBeanList.size(); i++) {
                     String temp_name = apiDocBeanList.get(i).getName();
                     if (temp_name.equals(name)) {
-                        return false;
+                        return new AppResult(false, "该项目系统中已经存在", null);
                     }
                 }
             }
 
             //如果不存在则添加
             String datetime = String.valueOf(new Date().getTime());
-            String apiDocUrl = FileParserTool.getUrl("apidoc") + datetime + File.separator + "apidoc" + File.separator;
-            String apiDocJsonUrl = apiDocUrl + "apidoc.json";
-            File apiDocUrlFile = new File(apiDocUrl);
-            File apiDocJsonFile = new File(apiDocJsonUrl);
-            //创建 apidoc.json文件
-            if (!apiDocUrlFile.exists()) {
-                apiDocUrlFile.mkdirs();
-                if (!apiDocJsonFile.exists()) {
-                    try {
-                        apiDocJsonFile.createNewFile();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-                if (apiDocJsonFile.exists()) {
-                    FileParserTool.appendFileText(JSON.toJSONString(apiDocBean), apiDocJsonUrl);
-                }
-
-                //创建apidoc.java文件
-                if (multipartFile != null) {
-                    //取得当前上传文件的文件名称
-                    String myFileName = multipartFile.getOriginalFilename();
-                    //如果名称不为“”,说明该文件存在，否则说明该文件不存在
-                    if (myFileName.trim() != "") {
-                        //重命名上传后的文件名
-                        String fileName = apiDocUrl + "apidoc.java";
-                        //定义上传路径
-                        File localFile = new File(fileName);
+            String apidocHome = FileParserTool.getUrl("application.properties");
+            if (!StringUtils.isEmpty(apidocHome)) {
+                String apidocConfing = apidocHome.substring(0, apidocHome.lastIndexOf("WEB-INF")) + "apidocconfig";
+                String apiDocUrl = apidocConfing + File.separator + datetime + File.separator + "apidoc";
+                String apiDocJsonUrl = apiDocUrl + File.separator + "apidoc.json";
+                File apiDocUrlFile = new File(apiDocUrl);
+                File apiDocJsonFile = new File(apiDocJsonUrl);
+                //创建 apidoc.json文件
+                if (!apiDocUrlFile.exists()) {
+                    apiDocUrlFile.mkdirs();
+                    if (!apiDocJsonFile.exists()) {
                         try {
-                            multipartFile.transferTo(localFile);
+                            apiDocJsonFile.createNewFile();
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
                     }
-                }
+                    if (apiDocJsonFile.exists()) {
+                        FileParserTool.appendFileText(JSON.toJSONString(apiDocBean), apiDocJsonUrl);
+                    }
 
-                //执行node.js命令
-                Runtime runtime = Runtime.getRuntime();
-                try {
-                    String destPath = apiDocUrl.substring(0, apiDocUrl.lastIndexOf("WEB-INF")) + "apidoc/" + name;
-                    runtime.exec("cmd /c apidoc -i " + apiDocUrl + " -o " + destPath);
-                    result = true;
-                } catch (Exception e) {
-                    e.printStackTrace();
+                    //创建apidoc.java文件
+                    if (multipartFile != null) {
+                        //取得当前上传文件的文件名称
+                        String myFileName = multipartFile.getOriginalFilename();
+                        //如果名称不为“”,说明该文件存在，否则说明该文件不存在
+                        if (myFileName.trim() != "") {
+                            //重命名上传后的文件名
+                            String fileName = apiDocUrl + File.separator + "apidoc.java";
+                            //定义上传路径
+                            File localFile = new File(fileName);
+                            try {
+                                multipartFile.transferTo(localFile);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+
+                    //执行node.js命令
+                    Runtime runtime = Runtime.getRuntime();
+                    try {
+                        String destPath = apidocHome.substring(0, apidocHome.lastIndexOf("WEB-INF")) + "apidoc" + File.separator + name;
+                        runtime.exec("cmd /c apidoc -i " + apiDocUrl + " -o " + destPath);
+                        resultFlag = true;
+                        resultMessage = "执行apidoc命令";
+                        //等待生成html文件
+                        try {
+                            Thread.sleep(3000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+
+                        //打包zip
+                        ZipUtil.zip(destPath, apiDocUrl + File.separator + "apidoc.zip");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        resultMessage = "apidoc命令执行失败";
+                    }
                 }
             }
+        } else {
+            logger.error("缺少配置参数application.properties");
         }
-        return result;
+        appResult.setResultFlag(resultFlag);
+        appResult.setResultMessage(resultMessage);
+        return appResult;
     }
 
 
@@ -140,27 +166,34 @@ public class ApiDocUtil {
      * @param name
      * @return
      */
-    public static boolean deleteApiDoc(String name) {
-        boolean result = false;
+    public static AppResult deleteApiDoc(String name) {
+        AppResult appResult = new AppResult();
+        boolean resultFlag = false;
+        String resultMessage = "删除失败！";
         if (!StringUtils.isEmpty(name)) {
             List<ApiDocBean> apiDocBeanList = getApiDocList();
             if (apiDocBeanList != null && apiDocBeanList.size() > 0) {
                 for (int i = 0; i < apiDocBeanList.size(); i++) {
                     String temp_name = apiDocBeanList.get(i).getName();
                     if (name.equals(temp_name)) {
-                        result = FileParserTool.delete(apiDocBeanList.get(i).getApiDocPath().getParentFile().getPath());
-                        if (result) {
-                            String apidocHome = FileParserTool.getUrl("apidoc");
+                        resultFlag = FileParserTool.delete(apiDocBeanList.get(i).getApiDocPath().getParentFile().getPath());
+                        if (resultFlag) {
+                            String apidocHome = FileParserTool.getUrl("application.properties");
                             File apiDocWeb = new File(apidocHome.substring(0, apidocHome.lastIndexOf("WEB-INF")) + "apidoc" + File.separator + name);
                             if (apiDocWeb.exists()) {
-                                result = FileParserTool.delete(apiDocWeb.getPath());
+                                resultFlag = FileParserTool.delete(apiDocWeb.getPath());
+                                if (resultFlag) {
+                                    resultMessage = "删除成功";
+                                }
                             }
                         }
                     }
                 }
             }
         }
-        return result;
+        appResult.setResultFlag(resultFlag);
+        appResult.setResultMessage(resultMessage);
+        return appResult;
     }
 
     /**
@@ -170,16 +203,19 @@ public class ApiDocUtil {
      * @param multipartFile
      * @return
      */
-    public static boolean updateApiDoc(ApiDocBean apiDocBean, MultipartFile multipartFile) {
-        boolean result = false;
+    public static AppResult updateApiDoc(ApiDocBean apiDocBean, MultipartFile multipartFile) {
+        AppResult appResult = new AppResult(false, "更新失败", null);
         String name = apiDocBean.getName();
         if (!StringUtils.isEmpty(name)) {
-            result = deleteApiDoc(name);
-            if (result) {
-                addApiDoc(apiDocBean, multipartFile);
+            appResult = deleteApiDoc(name);
+            if (appResult.getResultFlag()) {
+                appResult = addApiDoc(apiDocBean, multipartFile);
+                if (appResult.getResultFlag()) {
+                    appResult = new AppResult(true, "更新成功", null);
+                }
             }
         }
-        return result;
+        return appResult;
     }
 
     /**
@@ -204,4 +240,6 @@ public class ApiDocUtil {
         }
         return result;
     }
+
+
 }

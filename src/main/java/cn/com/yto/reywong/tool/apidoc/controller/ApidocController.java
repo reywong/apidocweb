@@ -1,6 +1,7 @@
 package cn.com.yto.reywong.tool.apidoc.controller;
 
 import cn.com.yto.reywong.tool.apidoc.domain.ApiDocBean;
+import cn.com.yto.reywong.tool.apidoc.domain.AppResult;
 import cn.com.yto.reywong.tool.apidoc.util.ApiDocUtil;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -45,7 +46,7 @@ public class ApidocController {
      */
     @RequestMapping(value = "/addApiDoc")
     public String addApiDoc(HttpServletRequest request, Model model) {
-        String result = "index";
+        String result = "redirect:/apidocController/index";
         //创建一个通用的多部分解析器
         CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver(request.getSession().getServletContext());
         //判断 request 是否有文件上传,即多部分请求
@@ -68,14 +69,15 @@ public class ApidocController {
             apiDocBean.setUrl(url);
             apiDocBean.setSampleUrl(sampleUrl);
 
-            boolean resultFlag = false;
+            AppResult appResult = new AppResult(false, "请上传apidoc接口文件", null);
             Iterator<String> iter = multiRequest.getFileNames();
             while (iter.hasNext()) {
                 //取得上传文件
                 MultipartFile multipartFile = multiRequest.getFile(iter.next());
-                resultFlag = ApiDocUtil.addApiDoc(apiDocBean, multipartFile);
+                appResult = ApiDocUtil.addApiDoc(apiDocBean, multipartFile);
+                model.addAttribute("appResult", appResult);
             }
-            if (resultFlag) {
+            if (appResult.getResultFlag()) {
                 try {
                     Thread.sleep(2000);
                 } catch (InterruptedException e) {
@@ -89,7 +91,7 @@ public class ApidocController {
 
     @RequestMapping(value = "/updateApiDoc")
     public String updateApiDoc(HttpServletRequest request, Model model) {
-        String result = "index";
+        String result = "redirect:/apidocController/index";
         //创建一个通用的多部分解析器
         CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver(request.getSession().getServletContext());
         //判断 request 是否有文件上传,即多部分请求
@@ -112,19 +114,15 @@ public class ApidocController {
             apiDocBean.setUrl(url);
             apiDocBean.setSampleUrl(sampleUrl);
 
-            boolean resultFlag = false;
+            AppResult appResult = new AppResult(false, "操作失败");
             Iterator<String> iter = multiRequest.getFileNames();
             while (iter.hasNext()) {
                 //取得上传文件
                 MultipartFile multipartFile = multiRequest.getFile(iter.next());
-                resultFlag = ApiDocUtil.updateApiDoc(apiDocBean, multipartFile);
+                appResult = ApiDocUtil.updateApiDoc(apiDocBean, multipartFile);
+                model.addAttribute("appResult", appResult);
             }
-            if (resultFlag) {
-                try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+            if (appResult.getResultFlag()) {
                 result = "redirect:/apidoc/" + name + "/index.html";
             }
         }
@@ -134,7 +132,7 @@ public class ApidocController {
     @RequestMapping(value = "/deleteApiDoc")
     public String deleteApiDoc(String name, Model model) {
         String result = "redirect:/apidocController/index";
-        model.addAttribute("resultFlag", ApiDocUtil.deleteApiDoc(name));
+        model.addAttribute("appResult", ApiDocUtil.deleteApiDoc(name));
         return result;
     }
 

@@ -14,6 +14,9 @@ public class ApiDocBean {
     private String sampleUrl;
     private File apiDocPath;
     private String apiDocWeb;
+    private String apiDocJson;
+    private String apiDocJava;
+    private String apiDocZip;
 
     public String getName() {
         return name;
@@ -78,4 +81,32 @@ public class ApiDocBean {
     public void setApiDocWeb(String apiDocWeb) {
         this.apiDocWeb = apiDocWeb;
     }
+
+    public String getApiDocJson() {
+        if (apiDocPath != null) {
+            String temp_apiDocPathStr = apiDocPath.getPath();
+            apiDocJson = temp_apiDocPathStr.substring(temp_apiDocPathStr.indexOf("apidocconfig") - 1, temp_apiDocPathStr.length()) + File.separator + "apidoc.json";
+        }
+        return apiDocJson;
+    }
+
+
+    public String getApiDocJava() {
+        if (apiDocPath != null) {
+            String temp_apiDocPathStr = apiDocPath.getPath();
+            apiDocJava = temp_apiDocPathStr.substring(temp_apiDocPathStr.indexOf("apidocconfig") - 1, temp_apiDocPathStr.length()) + File.separator + "apidoc.java";
+        }
+        return apiDocJava;
+    }
+
+
+    public String getApiDocZip() {
+        if (apiDocPath != null) {
+            String temp_apiDocPathStr = apiDocPath.getPath();
+            apiDocZip = temp_apiDocPathStr.substring(temp_apiDocPathStr.indexOf("apidocconfig") - 1, temp_apiDocPathStr.length()) + File.separator + "apidoc.zip";
+        }
+        return apiDocZip;
+    }
+
+
 }

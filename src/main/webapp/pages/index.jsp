@@ -13,11 +13,34 @@
             var apidoc = $("#apidoc").val();
             if (name == null || trim(name) == "") {
                 alert("name必填");
+            } else if (!checkName(name)) {
+                alert("该项目已经存在，请重新命名");
             } else if (apidoc == null || trim(apidoc) == "") {
                 alert("请上传apidoc描述文件");
             } else {
                 $("#myForm").submit();
             }
+        }
+
+        function checkName(name) {
+            var result = false;
+            $.ajax({
+                url: '/apidocController/getApiDoc',
+                type: 'POST', //GET
+                async: false,    //或false,是否异步
+                data: {
+                    name: name
+                },
+                timeout: 5000,    //超时时间
+                dataType: 'json',
+                success: function (data) {
+                    if (data != null) {
+                        result = true
+                    }
+                }
+            });
+            return result;
+
         }
 
         function updateApiDoc(name) {
@@ -81,7 +104,7 @@
     <form class="form-horizontal" id="myForm" action="/apidocController/addApiDoc" method="post"
           enctype="multipart/form-data">
         <div class="form-group">
-            <label for="name" class="col-sm-2 control-label">项目名称（name）</label>
+            <label for="name" class="col-sm-2 control-label">项目名称（name）<span style="color: red">*</span></label>
 
             <div class="col-sm-10">
                 <input type="text" class="form-control" name="name" id="name" placeholder="项目名称"
@@ -161,6 +184,7 @@
                 <th>接口显示url</th>
                 <th>接口测试URL</th>
                 <th>接口访问地址</th>
+                <th>下载</th>
                 <th>操作</th>
             </tr>
             <c:forEach var="ad" items="${apidoc}">
@@ -187,6 +211,15 @@
                         <a href="/apidoc/<c:out value="${ad.name}"/>/index.html">/apidoc/<c:out value="${ad.name}"/>/index.html</a>
                     </td>
                     <td>
+                        <a href="<c:out value="${ad.apiDocJson}"/>">apidoc.json</a>
+
+                        <p/>
+                        <a href="<c:out value="${ad.apiDocJava}"/>">apidoc.java</a>
+
+                        <p/>
+                        <a href="<c:out value="${ad.apiDocZip}"/>">apidoc.zip</a>
+                    </td>
+                    <td>
                         <button type="button" class="btn btn-warning"
                                 onclick="updateApiDoc('<c:out value="${ad.name}"/>')">修改
                         </button>
@@ -201,5 +234,14 @@
 </c:if>
 
 
+<c:if test="${not empty appResult}">
+    <c:out value="${appResult.reusultFlag}"/>
+
+    <c:out value="${appResult.resultMessage}"/>
+
+    <script type="text/javascript">
+        alert('<c:out value="${appResult.resultMessage}"/>');
+    </script>
+</c:if>
 </body>
 </html>
