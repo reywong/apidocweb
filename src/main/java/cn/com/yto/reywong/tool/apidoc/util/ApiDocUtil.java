@@ -10,9 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by wangrui on 2017/8/10.
@@ -31,10 +29,12 @@ public class ApiDocUtil {
         if (apiDocFiles != null && apiDocFiles.size() > 0) {
             for (int i = 0; i < apiDocFiles.size(); i++) {
                 File apiDocFile = apiDocFiles.get(i);
-                String apiDocJson = FileParserTool.getFileText(apiDocFile);
-                ApiDocBean apiDocBean = JSON.parseObject(apiDocJson, ApiDocBean.class);
-                apiDocBean.setApiDocPath(apiDocFile.getParentFile());
-                result.add(apiDocBean);
+                if(apiDocFile.exists()){
+                    String apiDocJson = FileParserTool.getFileText(apiDocFile);
+                    ApiDocBean apiDocBean = JSON.parseObject(apiDocJson, ApiDocBean.class);
+                    apiDocBean.setApiDocPath(apiDocFile.getParentFile());
+                    result.add(apiDocBean);
+                }
             }
         }
         return result;
@@ -108,6 +108,10 @@ public class ApiDocUtil {
                         }
                     }
                     if (apiDocJsonFile.exists()) {
+                        Map headerMap = new HashMap();
+                        headerMap.put("title", "返回首页");
+                        headerMap.put("filename", "header.md");
+                        apiDocBean.setHeader(headerMap);
                         FileParserTool.appendFileText(JSON.toJSONString(apiDocBean), apiDocJsonUrl);
                     }
 
@@ -129,6 +133,22 @@ public class ApiDocUtil {
                         }
                     }
 
+                    //创建header.md文件
+                    File headerFile = new File(apiDocUrl + File.separator + "header.md");
+                    if (!headerFile.exists()) {
+                        try {
+                            headerFile.createNewFile();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    if (headerFile.exists()) {
+                        String headerStr = "<a href='/'>返回首页</a>";
+                        FileParserTool.appendFileText(headerStr, headerFile.getPath());
+                    }
+
+                    //创建footer.md文件
+
                     //执行node.js命令
                     Runtime runtime = Runtime.getRuntime();
                     try {
@@ -146,7 +166,7 @@ public class ApiDocUtil {
                         if (!destFile.exists()) {
                             deleteApiDoc(name);
                             resultMessage = "apidoc命令执行失败";
-                        }else{
+                        } else {
                             resultFlag = true;
                             resultMessage = "执行apidoc命令";
                             //打包zip

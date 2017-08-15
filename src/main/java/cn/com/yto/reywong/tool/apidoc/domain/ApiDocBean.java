@@ -1,6 +1,7 @@
 package cn.com.yto.reywong.tool.apidoc.domain;
 
 import java.io.File;
+import java.util.Map;
 
 /**
  * Created by wangrui on 2017/8/10.
@@ -12,6 +13,7 @@ public class ApiDocBean {
     private String title;
     private String url;
     private String sampleUrl;
+    private Map header;
     private File apiDocPath;
     private String apiDocWeb;
     private String apiDocJson;
@@ -64,6 +66,14 @@ public class ApiDocBean {
 
     public void setSampleUrl(String sampleUrl) {
         this.sampleUrl = sampleUrl;
+    }
+
+    public Map getHeader() {
+        return header;
+    }
+
+    public void setHeader(Map header) {
+        this.header = header;
     }
 
     public File getApiDocPath() {
