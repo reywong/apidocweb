@@ -235,10 +235,6 @@
 
 
 <c:if test="${not empty appResult}">
-    <c:out value="${appResult.reusultFlag}"/>
-
-    <c:out value="${appResult.resultMessage}"/>
-
     <script type="text/javascript">
         alert('<c:out value="${appResult.resultMessage}"/>');
     </script>

@@ -11,11 +11,14 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.multipart.commons.CommonsMultipartResolver;
+import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
+import org.springframework.web.servlet.support.RequestContextUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by wangrui on 2017/8/10.
@@ -31,7 +34,11 @@ public class ApidocController {
      * @return
      */
     @RequestMapping(value = "/index")
-    public String index(Model model) {
+    public String index(HttpServletRequest request, Model model) {
+        Map<String, Object> modelMap = (Map<String, Object>) RequestContextUtils.getInputFlashMap(request);
+        if(modelMap!=null){
+            model.addAllAttributes(modelMap);
+        }
         String result = "index";
         List<ApiDocBean> list = ApiDocUtil.getApiDocList();
         model.addAttribute("apidoc", list);
@@ -45,7 +52,7 @@ public class ApidocController {
      * @return
      */
     @RequestMapping(value = "/addApiDoc")
-    public String addApiDoc(HttpServletRequest request, Model model) {
+    public String addApiDoc(HttpServletRequest request, RedirectAttributesModelMap model) {
         String result = "redirect:/apidocController/index";
         //创建一个通用的多部分解析器
         CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver(request.getSession().getServletContext());
@@ -75,7 +82,7 @@ public class ApidocController {
                 //取得上传文件
                 MultipartFile multipartFile = multiRequest.getFile(iter.next());
                 appResult = ApiDocUtil.addApiDoc(apiDocBean, multipartFile);
-                model.addAttribute("appResult", appResult);
+                model.addFlashAttribute("appResult", appResult);
             }
             if (appResult.getResultFlag()) {
                 try {
@@ -90,7 +97,7 @@ public class ApidocController {
     }
 
     @RequestMapping(value = "/updateApiDoc")
-    public String updateApiDoc(HttpServletRequest request, Model model) {
+    public String updateApiDoc(HttpServletRequest request, RedirectAttributesModelMap model) {
         String result = "redirect:/apidocController/index";
         //创建一个通用的多部分解析器
         CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver(request.getSession().getServletContext());
@@ -120,7 +127,7 @@ public class ApidocController {
                 //取得上传文件
                 MultipartFile multipartFile = multiRequest.getFile(iter.next());
                 appResult = ApiDocUtil.updateApiDoc(apiDocBean, multipartFile);
-                model.addAttribute("appResult", appResult);
+                model.addFlashAttribute("appResult", appResult);
             }
             if (appResult.getResultFlag()) {
                 result = "redirect:/apidoc/" + name + "/index.html";
@@ -130,9 +137,9 @@ public class ApidocController {
     }
 
     @RequestMapping(value = "/deleteApiDoc")
-    public String deleteApiDoc(String name, Model model) {
+    public String deleteApiDoc(String name, RedirectAttributesModelMap model) {
         String result = "redirect:/apidocController/index";
-        model.addAttribute("appResult", ApiDocUtil.deleteApiDoc(name));
+        model.addFlashAttribute("appResult", ApiDocUtil.deleteApiDoc(name));
         return result;
     }
 
