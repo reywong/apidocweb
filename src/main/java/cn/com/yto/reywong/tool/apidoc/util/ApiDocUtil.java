@@ -134,8 +134,6 @@ public class ApiDocUtil {
                     try {
                         String destPath = apidocHome.substring(0, apidocHome.lastIndexOf("WEB-INF")) + "apidoc" + File.separator + name;
                         runtime.exec("cmd /c apidoc -i " + apiDocUrl + " -o " + destPath);
-                        resultFlag = true;
-                        resultMessage = "执行apidoc命令";
                         //等待生成html文件
                         try {
                             Thread.sleep(3000);
@@ -143,8 +141,17 @@ public class ApiDocUtil {
                             e.printStackTrace();
                         }
 
-                        //打包zip
-                        ZipUtil.zip(destPath, apiDocUrl + File.separator + "apidoc.zip");
+                        //判断是否生成成功
+                        File destFile = new File(destPath);
+                        if (!destFile.exists()) {
+                            deleteApiDoc(name);
+                            resultMessage = "apidoc命令执行失败";
+                        }else{
+                            resultFlag = true;
+                            resultMessage = "执行apidoc命令";
+                            //打包zip
+                            ZipUtil.zip(destPath, apiDocUrl + File.separator + "apidoc.zip");
+                        }
                     } catch (Exception e) {
                         e.printStackTrace();
                         resultMessage = "apidoc命令执行失败";
