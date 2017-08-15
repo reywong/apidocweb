@@ -19,6 +19,7 @@
                 alert("请上传apidoc描述文件");
             } else {
                 $("#myForm").submit();
+                alert("正在生成文档，请稍候...");
             }
         }
 
